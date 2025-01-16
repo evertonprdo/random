@@ -1,6 +1,7 @@
 Product ID,Product Name,Category,Quantity Sold,Unit Price,Total Sales
-101,Wireless Mouse,Electronics,150,19.99,2998.5
-102,Mechanical Keyboard,Electronics,75,49.99,3749.25
+101,"Wireless, Mouse",Electronics,150,19.99,2998.5
+102,"Mechanical 
+Keyboard",Electronics,75,49.99,3749.25
 103,Notebook 200 Pages,Stationery,300,3.5,1050
 104,Ballpoint Pen Pack,Stationery,500,1.25,625
 105,Ceramic Coffee Mug,Kitchenware,200,7.99,1598
@@ -24,4 +25,5 @@ Set",Fitness,40,49.99,1999.6
 Bank",Electronics,130,39.99,5198.7
 119,Travel Pillow,Accessories,90,14.99,1349.1
 120,"Wall
-Clock",Home Decor,85,29.99,2549.15
+Clock","Ho""m,e"" Decor""",85,29.99,"25""4,
+""9.15"
