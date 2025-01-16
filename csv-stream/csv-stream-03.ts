@@ -13,7 +13,11 @@ class ProcessCSV {
    private intoDoublequote = false
    private lastBoundary = 0
 
-   public result: string[] = []
+   private _result: string[] = []
+
+   get result() {
+      return this._result
+   }
 
    constructor(stream: fs.ReadStream) {
       this.STREAM = stream
@@ -76,16 +80,16 @@ class ProcessCSV {
          this.handleNewLine(line)
       }
 
-      resolve(this.result)
+      resolve(this._result)
    }
 
    private handleNewLine(line: string) {
       if (line[0] === '\n') {
-         this.result.push(line.substring(1))
+         this._result.push(line.substring(1))
          return
       }
 
-      this.result.push(line)
+      this._result.push(line)
    }
 }
 
