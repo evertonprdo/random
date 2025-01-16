@@ -4,16 +4,20 @@ import path from 'node:path'
 // Node 22: npm run start:ts -- csv-stream-04.ts
 const initOfScript = new Date().getTime()
 
+/**
+ * The `ProcessCSV` class is designed to read and process CSV files in a streaming manner.
+ * It parses the CSV data chunk by chunk, handling special cases like double-quoted fields
+ * and line breaks. The class provides a result in a two-dimensional array format, where
+ * each sub-array represents a row in the CSV.
+ */
 class ProcessCSV {
    private readonly STREAM: fs.ReadStream
-   private readonly DOUBLEQUOTE = 34
-   private readonly BOUNDARY = 10
-   private readonly COMMA = 44
+   private readonly DOUBLEQUOTE = 34 // ASCII code for the double-quote character (").
+   private readonly LINE_FEED = 10 // ASCII code for the line feed character (\n).
+   private readonly COMMA = 44 // ASCII code for the comma character (,).
 
    private unprocessedBytes = Buffer.alloc(0)
-
    private currentLine = 0
-   private lastBreakIndex = 0
 
    private _result: string[][] = [[]]
 
@@ -25,8 +29,12 @@ class ProcessCSV {
       this.STREAM = stream
    }
 
+   /**
+    * Starts the CSV processing. Reads data from the stream and processes it.
+    * @returns A promise that resolves with the parsed CSV data as a two-dimensional array.
+    */
    public run() {
-      return new Promise((resolve, reject) => {
+      return new Promise<string[][]>((resolve, reject) => {
          this.STREAM.on('readable', this.handleOnReadable.bind(this))
 
          this.STREAM.on('end', () => this.handleOnEnd(resolve))
@@ -36,59 +44,66 @@ class ProcessCSV {
 
    private handleOnReadable() {
       let chunk: Buffer
-      let isBetweenDoublequote = false
 
       while ((chunk = this.STREAM.read()) !== null) {
-         if (this.unprocessedBytes.length > 0) {
-            chunk = Buffer.concat([this.unprocessedBytes, chunk])
-            this.unprocessedBytes = Buffer.alloc(0)
-         }
-
-         for (let i = 0; i < chunk.byteLength; i++) {
-            if (chunk[i] === this.DOUBLEQUOTE) {
-               isBetweenDoublequote = !isBetweenDoublequote
-            }
-
-            if (isBetweenDoublequote) {
-               continue
-            }
-
-            if (chunk[i] === this.COMMA) {
-               this.handleComma(chunk, i)
-            }
-
-            if (chunk[i] === this.BOUNDARY) {
-               this.handleBoundary(chunk, i)
-            }
-         }
-
-         if (this.lastBreakIndex > 0) {
-            this.unprocessedBytes = Buffer.concat([
-               this.unprocessedBytes,
-               chunk.subarray(this.lastBreakIndex + 1),
-            ])
-         } else {
-            this.unprocessedBytes = chunk
-         }
-
-         this.lastBreakIndex = 0
+         this.processChunk(chunk)
       }
    }
 
-   private handleComma(chunk: Buffer, commaIndex: number) {
-      const newCell = chunk.subarray(this.lastBreakIndex, commaIndex).toString()
+   private processChunk(chunk: Buffer) {
+      let isBetweenDoublequote = false
+      const p = { lastBreakIndex: 0 } // p is a pseudo-pointer for lastBreakIndex
+
+      if (this.unprocessedBytes.length > 0) {
+         chunk = Buffer.concat([this.unprocessedBytes, chunk])
+         this.unprocessedBytes = Buffer.alloc(0)
+      }
+
+      for (let i = 0; i < chunk.byteLength; i++) {
+         if (chunk[i] === this.DOUBLEQUOTE) {
+            isBetweenDoublequote = !isBetweenDoublequote
+         }
+
+         if (isBetweenDoublequote) {
+            continue
+         }
+
+         if (chunk[i] === this.COMMA) {
+            this.handleBreakIndex(chunk, i, p)
+         }
+
+         if (chunk[i] === this.LINE_FEED) {
+            this.handleBreakIndex(chunk, i, p)
+         }
+      }
+
+      if (p.lastBreakIndex > 0) {
+         this.unprocessedBytes = Buffer.concat([
+            this.unprocessedBytes,
+            chunk.subarray(p.lastBreakIndex + 1),
+         ])
+      } else {
+         this.unprocessedBytes = chunk
+      }
+   }
+
+   private handleBreakIndex(
+      chunk: Buffer,
+      breakIndex: number,
+      p: { lastBreakIndex: number },
+   ) {
+      const newCell = chunk.subarray(p.lastBreakIndex, breakIndex).toString()
       this.handleNewCell(newCell)
 
-      this.lastBreakIndex = commaIndex
+      p.lastBreakIndex = breakIndex
+
+      if (chunk[breakIndex] === this.LINE_FEED) {
+         this.result.push([])
+         this.currentLine++
+      }
    }
 
-   private handleBoundary(chunk: Buffer, boundaryIndex: number) {
-      this.handleComma(chunk, boundaryIndex)
-
-      this.handleNewLine()
-   }
-
-   private handleOnEnd(resolve: (value: unknown) => void) {
+   private handleOnEnd(resolve: (value: string[][]) => void) {
       const cell = this.unprocessedBytes.toString()
       if (cell.length > 0) {
          this.handleNewCell(cell)
@@ -104,24 +119,22 @@ class ProcessCSV {
 
       this.result[this.currentLine].push(cell)
    }
-
-   private handleNewLine() {
-      this.result.push([])
-      this.currentLine++
-   }
 }
 
 async function run() {
-   const FILENAME = 'sample.csv'
-   // const FILENAME = 'sample-doublequote.csv'
+   // const FILENAME = 'sample.csv'
+   const FILENAME = 'sample-doublequote.csv'
 
    const filePath = path.join(import.meta.dirname, FILENAME)
    const csvStream = fs.createReadStream(filePath, { highWaterMark: 8 })
 
    const processCSV = new ProcessCSV(csvStream)
-   await processCSV.run()
 
-   console.log(processCSV.result)
+   const result = await processCSV.run()
+   // await processCSV.run()
+
+   console.log(result)
+   // console.log(processCSV.result)
 
    const endOfScript = new Date().getTime()
    console.log('Running time: ', `${endOfScript - initOfScript}ms`)
