@@ -7,8 +7,8 @@ const BOUNDARY = 10 // \n
 const DOUBLEQUOTE = 34 // "
 const HIGH_WATER_MARK = 8
 
-// const FILENAME = "sample.csv"
-const FILENAME = 'sample-doublequote.csv'
+const FILENAME = 'sample.csv'
+// const FILENAME = 'sample-doublequote.csv'
 
 const filePath = path.join(import.meta.dirname, FILENAME)
 const readableCsv = fs.createReadStream(filePath, {
@@ -33,36 +33,37 @@ function handleNewLine(line) {
 readableCsv.on('readable', function () {
    let chunk
 
-   function handleBoundary(curr, boundaryIndex) {
-      const currBuffer = curr.subarray(lastBoundary, boundaryIndex)
+   function handleBoundary(chunk, boundaryIndex) {
+      const preBoundary = chunk.subarray(lastBoundary, boundaryIndex)
+      let newLine
 
-      const newLine = Buffer.concat([unprocessedBytes, currBuffer]).toString()
+      if (unprocessedBytes.length > 0) {
+         newLine = Buffer.concat([unprocessedBytes, preBoundary]).toString()
+         unprocessedBytes = Buffer.alloc(0)
+      } else {
+         newLine = preBoundary.toString()
+      }
 
-      unprocessedBytes = Buffer.alloc(0)
       lastBoundary = boundaryIndex
-
       handleNewLine(newLine)
    }
 
    while ((chunk = this.read()) !== null) {
-      let curr = Buffer.alloc(chunk.length)
-
       for (let i = 0; i < chunk.byteLength; i++) {
-         const byte = chunk[i]
-
-         if (byte === DOUBLEQUOTE) {
+         if (chunk[i] === DOUBLEQUOTE) {
             doublequoteFlag = !doublequoteFlag
          }
 
-         if (byte === BOUNDARY && !doublequoteFlag) {
-            handleBoundary(curr, i)
+         if (chunk[i] === BOUNDARY && !doublequoteFlag) {
+            handleBoundary(chunk, i)
          }
-
-         curr[i] = byte
       }
 
-      const currBuffer = curr.subarray(lastBoundary)
-      unprocessedBytes = Buffer.concat([unprocessedBytes, currBuffer])
+      unprocessedBytes = Buffer.concat([
+         unprocessedBytes,
+         chunk.subarray(lastBoundary),
+      ])
+
       lastBoundary = 0
    }
 })
@@ -79,3 +80,5 @@ readableCsv.on('end', () => {
    console.log('\n============= end =============\n')
    console.log('Running time: ', `${endOfScript - initOfScript}ms`)
 })
+
+// Node 22: npm run start -- csv-stream-02.js

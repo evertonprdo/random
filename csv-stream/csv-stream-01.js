@@ -77,3 +77,5 @@ readableCsv.on('end', () => {
    console.log('\n============= end =============\n')
    console.log('Running time: ', `${endOfScript - initOfScript}ms`)
 })
+
+// Node 22: npm run start -- csv-stream-01.js

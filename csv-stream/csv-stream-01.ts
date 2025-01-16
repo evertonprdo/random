@@ -82,4 +82,4 @@ readableCsv.on('end', () => {
    console.log('Running time: ', `${endOfScript - initOfScript}ms`)
 })
 
-// Node 22: node --experimental-strip-types --experimental-transform-types csv-stream-01.ts
+// Node 22: npm run start:ts -- csv-stream-01.ts
