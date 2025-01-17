@@ -2,7 +2,7 @@
 // Runtime: 17ms, Memory: 58.11MB
 
 /**
- * To solve the problem, the sliding two pointers is used.
+ * To solve the problem, the two pointers is used.
  */
 function reverseWords(s: string): string {
    const result = new Array(s.length)
