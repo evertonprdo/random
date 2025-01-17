@@ -1,0 +1,12 @@
+{
+   "name": "leetcode",
+   "version": "1.0.0",
+   "scripts": {
+      "start": "node --experimental-strip-types --experimental-transform-types"
+   },
+   "license": "MIT",
+   "type": "module",
+   "engines": {
+      "node": "22.11.0"
+   }
+}
