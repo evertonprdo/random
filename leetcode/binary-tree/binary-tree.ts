@@ -38,6 +38,34 @@ class BinaryTree {
       return this.searchRecursive(this.root, data)
    }
 
+   dfs(data: number) {
+      return this.dfsRecursive(this.root, data)
+   }
+
+   bfs(data: number) {
+      if (this.root === null) {
+         return false
+      }
+
+      const queue: NNode[] = []
+      queue.push(this.root)
+
+      while (queue.length > 0) {
+         let node = queue.shift() as NNode
+         if (node.data === data) {
+            return true
+         }
+         if (node.left !== null) {
+            queue.push(node.left)
+         }
+         if (node.right !== null) {
+            queue.push(node.right)
+         }
+      }
+
+      return false
+   }
+
    private searchRecursive(node: NNode | null, data: number) {
       if (node === null) {
          return false
@@ -52,6 +80,22 @@ class BinaryTree {
       }
 
       return this.searchRecursive(node.right, data)
+   }
+
+   private dfsRecursive(node: NNode | null, data: number) {
+      if (node === null) {
+         return false
+      }
+      if (node.data === data) {
+         return true
+      }
+
+      if (this.dfsRecursive(node.left, data)) {
+         return true
+      }
+      if (this.dfsRecursive(node.right, data)) {
+         return true
+      }
    }
 
    preOrderTraversal() {
@@ -104,9 +148,12 @@ tree.insert(1)
 tree.insert(10)
 tree.insert(7)
 tree.insert(15)
+tree.insert(20)
 
 // console.log('Search 4:', tree.search(4))
 // console.log('Search 6:', tree.search(6))
-console.log('pre traversal: ', tree.preOrderTraversal())
-console.log('in traversal: ', tree.inOrderTraversal())
-console.log('post traversal: ', tree.postOrderTraversal())
+// console.log('pre traversal: ', tree.preOrderTraversal())
+// console.log('in traversal: ', tree.inOrderTraversal())
+// console.log('post traversal: ', tree.postOrderTraversal())
+console.log('dfs: ', tree.dfs(20))
+console.log('bfs: ', tree.bfs(20))
