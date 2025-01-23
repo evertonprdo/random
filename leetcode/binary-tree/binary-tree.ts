@@ -66,7 +66,7 @@ class BinaryTree {
       return false
    }
 
-   private searchRecursive(node: NNode | null, data: number) {
+   private searchRecursive(node: NNode | null, data: number): boolean {
       if (node === null) {
          return false
       }
@@ -99,19 +99,19 @@ class BinaryTree {
    }
 
    preOrderTraversal() {
-      const result = []
+      const result: number[] = []
       this.preOrderRecursive(this.root, result)
       return result
    }
 
    inOrderTraversal() {
-      const result = []
+      const result: number[] = []
       this.inOrderRecursive(this.root, result)
       return result
    }
 
    postOrderTraversal() {
-      const result = []
+      const result: number[] = []
       this.postOrderRecursive(this.root, result)
       return result
    }
